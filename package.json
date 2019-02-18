@@ -22,7 +22,11 @@
     "axios",
   ],
   "author": "Troy Collinsworth",
-  "license": "ISC",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:tcollinsworth/redact-axios-error.git"
+  },
   "devDependencies": {
     "ava": "^0.16.0",
     "axios": "^0.18.0",
