@@ -1,10 +1,15 @@
 # redact-axios-error
 
-Axios errors are verbose when strigified and leak URL and header authorization.
+Axios errors are verbose when stringified and leak URL and header authorization.
 
 This library trims them down to essential information removing circular references.
 It redacts URL and header authorization.
 It can optionally be configured to redact any of request, response, and query string data.
+
+Traverses all error properties inspecting for nested AxiosErrors and grooms/redacts to a max depth of at least 5.
+Traversing is for redacting when an Error has for example a source or a cause AxiosError, however the property name could be anything.
+The AxiosError should be the final source/cause Error as only select AxiosError properties are copied onto the groomedAxiosError.
+All AxiosError parent Errors and properties are retained unaltered.
 
 ## Requirements
 
@@ -40,3 +45,80 @@ log.error(new AxiosErrorGroomer(true, true, true).getGroomedAxiosError(err), 'So
    * `includeRequestData(bool)` - initializes kafka, connecting to broker, returns promise, but should not await if utilizing fallback, return this for chaining
    * `includeResponseData(bool)` - closes the kafka connection, returns promise, return this for chaining
    * `includeQueryData(bool)` - queue a message for publishing to kafka, the defaultTopic will be used unless topic is provided, return this for chaining
+
+# Output Error JSON
+
+## Bad Server
+
+Not redacting request data or query string
+
+```javascript
+{
+  "config": {
+    "transformRequest": {},
+    "transformResponse": {},
+    "timeout": 5000,
+    "xsrfCookieName": "XSRF-TOKEN",
+    "xsrfHeaderName": "X-XSRF-TOKEN",
+    "maxContentLength": -1,
+    "headers": {
+      "Accept": "application/json, text/plain, */*",
+      "Content-Type": "application/json",
+      "User-Agent": "axios/0.18.0",
+      "Content-Length": 13
+    },
+    "method": "get",
+    "baseURL": "http://badServer:3000",
+    "data": "{\"some\":true}",
+    "url": "http://badServer:3000/?foo=bar"
+  },
+  "errno": "ENOTFOUND",
+  "code": "ENOTFOUND",
+  "syscall": "getaddrinfo",
+  "port": "3000",
+  "request": {}
+}
+```
+
+## Server Error
+
+Redacting request/response data and query string
+
+```javascript
+{
+  "config": {
+    "transformRequest": {},
+    "transformResponse": {},
+    "timeout": 5000,
+    "xsrfCookieName": "XSRF-TOKEN",
+    "xsrfHeaderName": "X-XSRF-TOKEN",
+    "maxContentLength": -1,
+    "headers": {
+      "Accept": "application/json, text/plain, */*",
+      "Content-Type": "application/json",
+      "Authorization": "[REDACTED]",
+      "User-Agent": "axios/0.18.0",
+      "Content-Length": 13
+    },
+    "method": "post",
+    "baseURL": "http://localhost:3000",
+    "url": "http://localhost:3000/errorPost?[REDACTED]",
+    "data": "[REDACTED]"
+  },
+  "request": {},
+  "response": {
+    "status": 500,
+    "statusText": "Internal Server Error",
+    "headers": {
+      "x-powered-by": "Express",
+      "content-security-policy": "default-src 'self'",
+      "x-content-type-options": "nosniff",
+      "content-type": "text/html; charset=utf-8",
+      "content-length": "3419",
+      "date": "Mon, 18 Feb 2019 17:57:52 GMT",
+      "connection": "close"
+    },
+    "data": "[REDACTED]"
+  }
+}
+```
