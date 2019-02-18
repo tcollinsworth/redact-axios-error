@@ -1,6 +1,6 @@
 {
   "name": "redact-axios-error",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "grooms and redacts axios errors to trim them down and make the more useful for logging",
   "main": "index.js",
   "scripts": {
