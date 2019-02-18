@@ -42,9 +42,9 @@ log.error(new AxiosErrorGroomer(true, true, true).getGroomedAxiosError(err), 'So
    * `AxiosErrorGroomer (includeRequestData = true, includeResponseData = true, includeQueryData = true)` - constructor, defaults to NOT redact request, response, and query string data
    * `getGroomedAxiosError(error)` - trims and redacts if AxiosError, otherwise returns the Error unaltered
    * `isAxiosError(error)` - true if the Error is an Axios error, called by the getGroomedAxiosError method
-   * `includeRequestData(bool)` - initializes kafka, connecting to broker, returns promise, but should not await if utilizing fallback, return this for chaining
-   * `includeResponseData(bool)` - closes the kafka connection, returns promise, return this for chaining
-   * `includeQueryData(bool)` - queue a message for publishing to kafka, the defaultTopic will be used unless topic is provided, return this for chaining
+   * `includeRequestData(bool)` - default true, false redacts request data
+   * `includeResponseData(bool)` - default true, false redacts response data
+   * `includeQueryData(bool)` - default true, false redacts query string data
 
 # Output Error JSON
 
