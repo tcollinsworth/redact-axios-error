@@ -34,7 +34,7 @@ log.error(new AxiosErrorGroomer().getGroomedAxiosError(err), 'Some error message
 OR
 
 To redact request, response, and query string data:
-log.error(new AxiosErrorGroomer(true, true, true).getGroomedAxiosError(err), 'Some error message')
+log.error(new AxiosErrorGroomer(false, false, false).getGroomedAxiosError(err), 'Some error message')
 ```
 
 # Methods
