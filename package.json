@@ -1,8 +1,8 @@
 {
   "name": "redact-axios-error",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "description": "grooms and redacts axios errors to trim them down and make them more useful for logging",
-  "main": "redact-axios-error.js",
+  "main": "index.js",
   "scripts": {
     "watchUnit": "NODE_ENV=DEBUG ava --fail-fast -v **/__tests__/**/*test*.js --watch",
     "ava": "ava",
@@ -46,7 +46,6 @@
   },
   "dependencies": {
     "babel-polyfill": "^6.26.0",
-    "esm": "^3.2.5",
     "lodash": "^4.17.11",
     "traverse": "^0.6.6"
   },

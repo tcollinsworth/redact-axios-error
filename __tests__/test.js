@@ -295,7 +295,7 @@ async function post(baseurl, urlPrefix, uid, pwd, data) {
 }
 
 function logGroomedError(groomedError) {
-  console.log(groomedError.message, stringify(groomedError, null, '  '))
+  // console.log(groomedError.message, stringify(groomedError, null, '  '))
 }
 
 function logRequest(req) {
