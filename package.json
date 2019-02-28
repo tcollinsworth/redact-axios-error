@@ -1,6 +1,6 @@
 {
   "name": "redact-axios-error",
-  "version": "0.1.9",
+  "version": "0.1.10",
   "description": "grooms and redacts axios errors to trim them down and make them more useful for logging",
   "main": "index.js",
   "scripts": {
@@ -47,6 +47,7 @@
   "dependencies": {
     "babel-polyfill": "^6.26.0",
     "lodash": "^4.17.11",
+    "safe-clone-deep": "^1.1.5",
     "traverse": "^0.6.6"
   },
   "ava": {

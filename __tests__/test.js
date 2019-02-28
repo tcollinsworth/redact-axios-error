@@ -133,6 +133,7 @@ test('badServer', async t => {
   } catch (err) {
     const groomer = new AxiosErrorGroomer()
     const groomedError = groomer.getGroomedAxiosError(err)
+
     logGroomedError(groomedError)
 
     t.is(groomedError.config.baseURL, "http://badServer:3000")
@@ -295,7 +296,7 @@ async function post(baseurl, urlPrefix, uid, pwd, data) {
 }
 
 function logGroomedError(groomedError) {
-  // console.log(groomedError.message, stringify(groomedError, null, '  '))
+  console.log(groomedError.message, stringify(groomedError, null, '  '))
 }
 
 function logRequest(req) {
