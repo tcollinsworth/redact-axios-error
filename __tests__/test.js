@@ -40,6 +40,12 @@ test.before(() => {
   })
 })
 
+test.after(async (t) => {
+  // try successful request after error request to be sure redact didn't affect axios
+  const resp = await happyAxiosRequest()
+  t.is(200, resp.status)
+})
+
 function throwTestError() {
   throw new Error('test')
 }
@@ -293,6 +299,10 @@ async function post(baseurl, urlPrefix, uid, pwd, data) {
       'Content-Type': 'application/json'
     }
   })
+}
+
+async function happyAxiosRequest(t) {
+  return await get("http://user:pass@localhost:3000", '/happyGet?foo=bar', 'foo', 'bar', {some:true})
 }
 
 function logGroomedError(groomedError) {
