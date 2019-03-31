@@ -4,6 +4,7 @@ import bodyParser from 'body-parser'
 import axios from 'axios'
 import stringify from 'json-stringify-safe'
 import cloneDeep from 'lodash/cloneDeep'
+import safeClone from 'safe-clone-deep'
 
 import { AxiosErrorGroomer } from '../index'
 
@@ -137,22 +138,25 @@ test('badServer', async t => {
     const resp = await get("http://user:pass@badServer:3000", '/?foo=bar', 'foo', 'bar', {some:true})
     t.fail()
   } catch (err) {
-    const groomer = new AxiosErrorGroomer()
-    const groomedError = groomer.getGroomedAxiosError(err)
+    const errBefore = safeClone(err)
+
+    const groomedError = new AxiosErrorGroomer().getGroomedAxiosError(err)
 
     logGroomedError(groomedError)
+
+    const errAfter = safeClone(err)
+    t.deepEqual(errBefore, errAfter)
 
     t.is(groomedError.config.baseURL, "http://badServer:3000")
     t.is(groomedError.config.url, "http://badServer:3000/?foo=bar")
     t.is(groomedError.config.data, "{\"some\":true}")
-    t.falsy(groomedError.response)
     t.falsy(groomedError.config.headers.Authorization)
 
     t.is(groomedError.errno, "ENOTFOUND")
     t.is(groomedError.code, "ENOTFOUND")
     t.is(groomedError.syscall, "getaddrinfo")
     t.is(groomedError.port, "3000")
-    t.deepEqual(groomedError.request, {data: undefined})
+    t.deepEqual({}, groomedError.response)
   }
 })
 
