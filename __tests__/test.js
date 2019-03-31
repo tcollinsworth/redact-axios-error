@@ -268,9 +268,11 @@ test('5th level is AxiosError, post, header authorization, redacting all', async
     }
     cause.cause = err //the axios error at the end
 
+    // const start = new Date().getTime()
     const groomer = new AxiosErrorGroomer(false, false, false)
     const groomedError = groomer.getGroomedAxiosError(parentError)
     logGroomedError(groomedError)
+    // console.log('duration', new Date().getTime() - start)
 
     t.is(cause.cause.config.baseURL, "http://localhost:3000")
     t.is(cause.cause.config.url, "http://localhost:3000/errorPost?[REDACTED]")
