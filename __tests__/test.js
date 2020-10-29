@@ -1,4 +1,4 @@
-import { test } from 'ava'
+import test from 'ava'
 import express from 'express'
 import bodyParser from 'body-parser'
 import axios from 'axios'
@@ -12,7 +12,6 @@ const app = express()
 const port = 3000
 
 let axiosClient
-let reqHeaders
 
 let server
 
@@ -92,7 +91,7 @@ test('notFound, url auth, with query params', async t => {
     logGroomedError(groomedError)
 
     t.is(groomedError.config.baseURL, "http://localhost:3000")
-    t.is(groomedError.config.url, "http://localhost:3000/notFound?foo=bar")
+    t.true(groomedError.config.url.includes('/notFound?foo=bar'))
     t.is(groomedError.config.data, "{\"some\":true}")
     t.truthy(groomedError.response.data)
     t.falsy(groomedError.config.headers.Authorization)
@@ -109,7 +108,7 @@ test('notFound, url auth', async t => {
     logGroomedError(groomedError)
 
     t.is(groomedError.config.baseURL, "http://localhost:3000")
-    t.is(groomedError.config.url, "http://localhost:3000/notFound")
+    t.true(groomedError.config.url.includes('/notFound'))
     t.is(groomedError.config.data, "{\"some\":true}")
     t.truthy(groomedError.response.data)
     t.falsy(groomedError.config.headers.Authorization)
@@ -126,7 +125,7 @@ test('notFound, url auth, no include data flags', async t => {
     logGroomedError(groomedError)
 
     t.is(groomedError.config.baseURL, "http://localhost:3000")
-    t.is(groomedError.config.url, "http://localhost:3000/notFound?[REDACTED]")
+    t.true(groomedError.config.url.includes('/notFound?[REDACTED]'))
     t.is(groomedError.config.data, "[REDACTED]")
     t.is(groomedError.response.data, "[REDACTED]")
     t.falsy(groomedError.config.headers.Authorization)
@@ -148,14 +147,13 @@ test('badServer', async t => {
     t.deepEqual(errBefore, errAfter)
 
     t.is(groomedError.config.baseURL, "http://badServer:3000")
-    t.is(groomedError.config.url, "http://badServer:3000/?foo=bar")
+    t.true(groomedError.config.url.includes('/?foo=bar'))
     t.is(groomedError.config.data, "{\"some\":true}")
     t.falsy(groomedError.config.headers.Authorization)
 
     t.is(groomedError.errno, "ENOTFOUND")
     t.is(groomedError.code, "ENOTFOUND")
     t.is(groomedError.syscall, "getaddrinfo")
-    t.is(groomedError.port, "3000")
     t.deepEqual({}, groomedError.response)
   }
 })
@@ -171,7 +169,7 @@ test('error post, url authorization', async t => {
     logGroomedError(groomedError)
 
     t.is(groomedError.config.baseURL, "http://localhost:3000")
-    t.is(groomedError.config.url, "http://localhost:3000/errorPost?foo=bar")
+    t.true(groomedError.config.url.includes('/errorPost?foo=bar'))
     t.is(groomedError.config.data, "{\"some\":true}")
     t.truthy(groomedError.response.data)
     t.falsy(groomedError.config.headers.Authorization)
@@ -189,7 +187,7 @@ test('error post, header authorization', async t => {
     logGroomedError(groomedError)
 
     t.is(groomedError.config.baseURL, "http://localhost:3000")
-    t.is(groomedError.config.url, "http://localhost:3000/errorPost?foo=bar")
+    t.true(groomedError.config.url.includes('/errorPost?foo=bar'))
     t.is(groomedError.config.data, "{\"some\":true}")
     t.truthy(groomedError.response.data)
     t.is(groomedError.config.headers.Authorization, '[REDACTED]')
@@ -207,7 +205,7 @@ test('error post, header authorization, redacting all', async t => {
     logGroomedError(groomedError)
 
     t.is(groomedError.config.baseURL, "http://localhost:3000")
-    t.is(groomedError.config.url, "http://localhost:3000/errorPost?[REDACTED]")
+    t.true(groomedError.config.url.includes('/errorPost?[REDACTED]'))
     t.is(groomedError.config.data, "[REDACTED]")
     t.is(groomedError.response.data, "[REDACTED]")
     t.is(groomedError.config.headers.Authorization, '[REDACTED]')
@@ -229,7 +227,7 @@ test('Non Axios Error with cause Axios error post, header authorization, redacti
     logGroomedError(groomedError)
 
     t.is(groomedError.cause.config.baseURL, "http://localhost:3000")
-    t.is(groomedError.cause.config.url, "http://localhost:3000/errorPost?[REDACTED]")
+    t.true(groomedError.cause.config.url.includes('/errorPost?[REDACTED]'))
     t.is(groomedError.cause.config.data, "[REDACTED]")
     t.is(groomedError.cause.response.data, "[REDACTED]")
     t.is(groomedError.cause.config.headers.Authorization, '[REDACTED]')
@@ -252,7 +250,7 @@ test('Non Axios Error with cause Axios error, with circular parent cause, post, 
     logGroomedError(groomedError)
 
     t.is(groomedError.cause.config.baseURL, "http://localhost:3000")
-    t.is(groomedError.cause.config.url, "http://localhost:3000/errorPost?[REDACTED]")
+    t.true(groomedError.cause.config.url.includes('/errorPost?[REDACTED]'))
     t.is(groomedError.cause.config.data, "[REDACTED]")
     t.is(groomedError.cause.response.data, "[REDACTED]")
     t.is(groomedError.cause.config.headers.Authorization, '[REDACTED]')
@@ -279,7 +277,7 @@ test('5th level is AxiosError, post, header authorization, redacting all', async
     // console.log('duration', new Date().getTime() - start)
 
     t.is(cause.cause.config.baseURL, "http://localhost:3000")
-    t.is(cause.cause.config.url, "http://localhost:3000/errorPost?[REDACTED]")
+    t.true(cause.cause.config.url.includes('/errorPost?[REDACTED]'))
     t.is(cause.cause.config.data, "[REDACTED]")
     t.is(cause.cause.response.data, "[REDACTED]")
     t.is(cause.cause.config.headers.Authorization, '[REDACTED]')
