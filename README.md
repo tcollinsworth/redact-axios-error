@@ -11,6 +11,10 @@ Traversing is for redacting when an Error has for example a source or a cause Ax
 The AxiosError should be the final source/cause Error as only select AxiosError properties are copied onto the groomedAxiosError.
 All AxiosError parent Errors and properties are retained unaltered.
 
+# axios-error-redact-interceptor
+
+Can be registerd on axios to redact all response errors before they are thrown.
+
 ## Requirements
 
 Node 8+
@@ -20,6 +24,16 @@ Node 8+
 ```console
 npm i -S redact-axios-error
 ```
+
+# Interceptor Usage
+
+```javascript
+import { getAxiosErrorInterceptor } from 'axios-error-redact-interceptor'
+
+axiosClient.interceptors.response.use(null, getAxiosErrorInterceptor())
+```
+
+Optionally, an AxiosErrorGroomer with various configurations can be passed to getAxiosErrorInterceptor.
 
 # Usage
 

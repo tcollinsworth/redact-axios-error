@@ -7,6 +7,7 @@ import cloneDeep from 'lodash/cloneDeep'
 import safeClone from 'safe-clone-deep'
 
 import { AxiosErrorGroomer } from '../redact-axios-error'
+import { config, getAxiosErrorInterceptor } from '../axios-error-redact-interceptor'
 
 const app = express()
 const port = 3000
@@ -16,6 +17,8 @@ let axiosClient
 let server
 
 test.before(() => {
+  const axiosErrorInterceptor = getAxiosErrorInterceptor()
+
   app.use(bodyParser.json())
   app.use(bodyParser.urlencoded({
     extended: true,
@@ -38,6 +41,12 @@ test.before(() => {
   axiosClient = axios.create({
     timeout: 5000,
   })
+
+  axiosClient.interceptors.response.use(null, axiosErrorInterceptor)
+})
+
+test.beforeEach(() => {
+  config.axiosErrorGroomer = new AxiosErrorGroomer()
 })
 
 test.after(async (t) => {
@@ -56,25 +65,14 @@ test.after.always(() => {
   }
 })
 
-test('isAxiosError null', t => {
-  t.falsy(new AxiosErrorGroomer().isAxiosError(null))
-})
+function axioResponseInterceptor(response) {
+  return response
+}
 
-test('isAxiosError undefined', t => {
-  t.falsy(new AxiosErrorGroomer().isAxiosError(undefined))
-})
-
-test('isAxiosError simple Error', t => {
-  t.falsy(new AxiosErrorGroomer().isAxiosError(new Error('test')))
-})
-
-test('isAxiosError Error with props', t => {
-  const e = new Error('test')
-  e.config = {}
-  t.falsy(new AxiosErrorGroomer().isAxiosError(e))
-  e.request = {}
-  t.truthy(new AxiosErrorGroomer().isAxiosError(e))
-})
+function axioErrorInterceptor(error) {
+  if (config.axiosErrorGroomer == null) return Promise.reject(error)
+  return Promise.reject(config.axiosErrorGroomer.getGroomedAxiosError(error))
+}
 
 test('happyGet', async t => {
   const resp = await get("http://user:pass@localhost:3000", '/happyGet?foo=bar', 'foo', 'bar', {some:true})
@@ -86,15 +84,14 @@ test('notFound, url auth, with query params', async t => {
     const resp = await get("http://user:pass@localhost:3000", '/notFound?foo=bar', 'foo', 'bar', {some:true})
     t.fail()
   } catch (err) {
-    const groomer = new AxiosErrorGroomer()
-    const groomedError = groomer.getGroomedAxiosError(err)
-    logGroomedError(groomedError)
+    logGroomedError(err)
 
-    t.is(groomedError.config.baseURL, "http://localhost:3000")
-    t.true(groomedError.config.url.includes('/notFound?foo=bar'))
-    t.is(groomedError.config.data, "{\"some\":true}")
-    t.truthy(groomedError.response.data)
-    t.falsy(groomedError.config.headers.Authorization)
+    t.is(err.config.baseURL, "http://localhost:3000")
+    t.true(err.config.url.includes('/notFound?foo=bar'))
+    t.is(err.config.data, "{\"some\":true}")
+    t.truthy(err.response.data)
+    t.falsy(err.config.headers.Authorization)
+    t.falsy(stringify(err).includes('pass'))
   }
 })
 
@@ -103,32 +100,32 @@ test('notFound, url auth', async t => {
     const resp = await get("http://user:pass@localhost:3000", '/notFound', 'foo', 'bar', {some:true})
     t.fail()
   } catch (err) {
-    const groomer = new AxiosErrorGroomer()
-    const groomedError = groomer.getGroomedAxiosError(err)
-    logGroomedError(groomedError)
+    logGroomedError(err)
 
-    t.is(groomedError.config.baseURL, "http://localhost:3000")
-    t.true(groomedError.config.url.includes('/notFound'))
-    t.is(groomedError.config.data, "{\"some\":true}")
-    t.truthy(groomedError.response.data)
-    t.falsy(groomedError.config.headers.Authorization)
+    t.is(err.config.baseURL, "http://localhost:3000")
+    t.true(err.config.url.includes('/notFound'))
+    t.is(err.config.data, "{\"some\":true}")
+    t.truthy(err.response.data)
+    t.falsy(err.config.headers.Authorization)
+    t.falsy(stringify(err).includes('pass'))
   }
 })
 
 test('notFound, url auth, no include data flags', async t => {
+  config.axiosErrorGroomer = new AxiosErrorGroomer(false, false, false)
+
   try {
     const resp = await get("http://user:pass@localhost:3000", '/notFound?foo=bar', 'foo', 'bar', {some:true})
     t.fail()
   } catch (err) {
-    const groomer = new AxiosErrorGroomer(false, false, false)
-    const groomedError = groomer.getGroomedAxiosError(err)
-    logGroomedError(groomedError)
+    logGroomedError(err)
 
-    t.is(groomedError.config.baseURL, "http://localhost:3000")
-    t.true(groomedError.config.url.includes('/notFound?[REDACTED]'))
-    t.is(groomedError.config.data, "[REDACTED]")
-    t.is(groomedError.response.data, "[REDACTED]")
-    t.falsy(groomedError.config.headers.Authorization)
+    t.is(err.config.baseURL, "http://localhost:3000")
+    t.true(err.config.url.includes('/notFound?[REDACTED]'))
+    t.is(err.config.data, "[REDACTED]")
+    t.is(err.response.data, "[REDACTED]")
+    t.falsy(err.config.headers.Authorization)
+    t.falsy(stringify(err).includes('pass'))
   }
 })
 
@@ -139,22 +136,21 @@ test('badServer', async t => {
   } catch (err) {
     const errBefore = safeClone(err)
 
-    const groomedError = new AxiosErrorGroomer().getGroomedAxiosError(err)
-
-    logGroomedError(groomedError)
+    logGroomedError(err)
 
     const errAfter = safeClone(err)
     t.deepEqual(errBefore, errAfter)
 
-    t.is(groomedError.config.baseURL, "http://badServer:3000")
-    t.true(groomedError.config.url.includes('/?foo=bar'))
-    t.is(groomedError.config.data, "{\"some\":true}")
-    t.falsy(groomedError.config.headers.Authorization)
+    t.is(err.config.baseURL, "http://badServer:3000")
+    t.true(err.config.url.includes('/?foo=bar'))
+    t.is(err.config.data, "{\"some\":true}")
+    t.falsy(err.config.headers.Authorization)
 
-    t.is(groomedError.errno, "ENOTFOUND")
-    t.is(groomedError.code, "ENOTFOUND")
-    t.is(groomedError.syscall, "getaddrinfo")
-    t.deepEqual({}, groomedError.response)
+    t.is(err.errno, "ENOTFOUND")
+    t.is(err.code, "ENOTFOUND")
+    t.is(err.syscall, "getaddrinfo")
+    t.deepEqual({}, err.response)
+    t.falsy(stringify(err).includes('pass'))
   }
 })
 
@@ -164,15 +160,14 @@ test('error post, url authorization', async t => {
     const resp = await post("http://user:pass@localhost:3000", '/errorPost?foo=bar', 'foo', 'bar', {some:true})
     t.fail()
   } catch (err) {
-    const groomer = new AxiosErrorGroomer()
-    const groomedError = groomer.getGroomedAxiosError(err)
-    logGroomedError(groomedError)
+    logGroomedError(err)
 
-    t.is(groomedError.config.baseURL, "http://localhost:3000")
-    t.true(groomedError.config.url.includes('/errorPost?foo=bar'))
-    t.is(groomedError.config.data, "{\"some\":true}")
-    t.truthy(groomedError.response.data)
-    t.falsy(groomedError.config.headers.Authorization)
+    t.is(err.config.baseURL, "http://localhost:3000")
+    t.true(err.config.url.includes('/errorPost?foo=bar'))
+    t.is(err.config.data, "{\"some\":true}")
+    t.truthy(err.response.data)
+    t.falsy(err.config.headers.Authorization)
+    t.falsy(stringify(err).includes('pass'))
   }
 })
 
@@ -182,38 +177,40 @@ test('error post, header authorization', async t => {
     const resp = await post("http://localhost:3000", '/errorPost?foo=bar', 'foo', 'bar', {some:true})
     t.fail()
   } catch (err) {
-    const groomer = new AxiosErrorGroomer()
-    const groomedError = groomer.getGroomedAxiosError(err)
-    logGroomedError(groomedError)
+    logGroomedError(err)
 
-    t.is(groomedError.config.baseURL, "http://localhost:3000")
-    t.true(groomedError.config.url.includes('/errorPost?foo=bar'))
-    t.is(groomedError.config.data, "{\"some\":true}")
-    t.truthy(groomedError.response.data)
-    t.is(groomedError.config.headers.Authorization, '[REDACTED]')
+    t.is(err.config.baseURL, "http://localhost:3000")
+    t.true(err.config.url.includes('/errorPost?foo=bar'))
+    t.is(err.config.data, "{\"some\":true}")
+    t.truthy(err.response.data)
+    t.is(err.config.headers.Authorization, '[REDACTED]')
+    t.falsy(stringify(err).includes('pass'))
   }
 })
 
 //axios strips header authorization if url authorization exists
 test('error post, header authorization, redacting all', async t => {
+  config.axiosErrorGroomer = new AxiosErrorGroomer(false, false, false)
+
   try {
     const resp = await post("http://localhost:3000", '/errorPost?foo=bar', 'foo', 'bar', {some:true})
     t.fail()
   } catch (err) {
-    const groomer = new AxiosErrorGroomer(false, false, false)
-    const groomedError = groomer.getGroomedAxiosError(err)
-    logGroomedError(groomedError)
+    logGroomedError(err)
 
-    t.is(groomedError.config.baseURL, "http://localhost:3000")
-    t.true(groomedError.config.url.includes('/errorPost?[REDACTED]'))
-    t.is(groomedError.config.data, "[REDACTED]")
-    t.is(groomedError.response.data, "[REDACTED]")
-    t.is(groomedError.config.headers.Authorization, '[REDACTED]')
+    t.is(err.config.baseURL, "http://localhost:3000")
+    t.true(err.config.url.includes('/errorPost?[REDACTED]'))
+    t.is(err.config.data, "[REDACTED]")
+    t.is(err.response.data, "[REDACTED]")
+    t.is(err.config.headers.Authorization, '[REDACTED]')
+    t.falsy(stringify(err).includes('pass'))
   }
 })
 
 //axios strips header authorization if url authorization exists
 test('Non Axios Error with cause Axios error post, header authorization, redacting all', async t => {
+  config.axiosErrorGroomer = null
+
   try {
     const resp = await post("http://localhost:3000", '/errorPost?foo=bar', 'foo', 'bar', {some:true})
     t.fail()
@@ -222,8 +219,8 @@ test('Non Axios Error with cause Axios error post, header authorization, redacti
     const parentNonAxiosError = new Error('parentNonAxiosError')
     parentNonAxiosError.cause = err
 
-    const groomer = new AxiosErrorGroomer(false, false, false)
-    const groomedError = groomer.getGroomedAxiosError(parentNonAxiosError)
+    config.axiosErrorGroomer = new AxiosErrorGroomer(false, false, false)
+    const groomedError = config.axiosErrorGroomer.getGroomedAxiosError(parentNonAxiosError)
     logGroomedError(groomedError)
 
     t.is(groomedError.cause.config.baseURL, "http://localhost:3000")
@@ -231,11 +228,14 @@ test('Non Axios Error with cause Axios error post, header authorization, redacti
     t.is(groomedError.cause.config.data, "[REDACTED]")
     t.is(groomedError.cause.response.data, "[REDACTED]")
     t.is(groomedError.cause.config.headers.Authorization, '[REDACTED]')
+    t.falsy(stringify(groomedError).includes('pass'))
   }
 })
 
 //axios strips header authorization if url authorization exists
 test('Non Axios Error with cause Axios error, with circular parent cause, post, header authorization, redacting all', async t => {
+  config.axiosErrorGroomer = null
+
   try {
     const resp = await post("http://localhost:3000", '/errorPost?foo=bar', 'foo', 'bar', {some:true})
     t.fail()
@@ -245,8 +245,8 @@ test('Non Axios Error with cause Axios error, with circular parent cause, post, 
     parentNonAxiosError.cause = err
     err.cause = parentNonAxiosError //circular
 
-    const groomer = new AxiosErrorGroomer(false, false, false)
-    const groomedError = groomer.getGroomedAxiosError(parentNonAxiosError)
+    config.axiosErrorGroomer = new AxiosErrorGroomer(false, false, false)
+    const groomedError = config.axiosErrorGroomer.getGroomedAxiosError(parentNonAxiosError)
     logGroomedError(groomedError)
 
     t.is(groomedError.cause.config.baseURL, "http://localhost:3000")
@@ -254,11 +254,14 @@ test('Non Axios Error with cause Axios error, with circular parent cause, post, 
     t.is(groomedError.cause.config.data, "[REDACTED]")
     t.is(groomedError.cause.response.data, "[REDACTED]")
     t.is(groomedError.cause.config.headers.Authorization, '[REDACTED]')
+    t.falsy(stringify(err).includes('pass'))
   }
 })
 
 //axios strips header authorization if url authorization exists
 test('5th level is AxiosError, post, header authorization, redacting all', async t => {
+  config.axiosErrorGroomer = null
+
   try {
     const resp = await post("http://localhost:3000", '/errorPost?foo=bar', 'foo', 'bar', {some:true})
     t.fail()
@@ -271,8 +274,8 @@ test('5th level is AxiosError, post, header authorization, redacting all', async
     cause.cause = err //the axios error at the end
 
     // const start = new Date().getTime()
-    const groomer = new AxiosErrorGroomer(false, false, false)
-    const groomedError = groomer.getGroomedAxiosError(parentError)
+    config.axiosErrorGroomer = new AxiosErrorGroomer(false, false, false)
+    const groomedError = config.axiosErrorGroomer.getGroomedAxiosError(parentError)
     logGroomedError(groomedError)
     // console.log('duration', new Date().getTime() - start)
 
@@ -281,6 +284,7 @@ test('5th level is AxiosError, post, header authorization, redacting all', async
     t.is(cause.cause.config.data, "[REDACTED]")
     t.is(cause.cause.response.data, "[REDACTED]")
     t.is(cause.cause.config.headers.Authorization, '[REDACTED]')
+    t.falsy(stringify(err).includes('pass'))
   }
 })
 

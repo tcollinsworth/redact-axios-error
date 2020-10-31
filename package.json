@@ -1,15 +1,14 @@
 {
   "name": "redact-axios-error",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "engines": {
     "node": ">=10.13.0"
   },
   "description": "grooms and redacts axios errors to trim them down and make them more useful for logging",
-  "main": "index.js",
   "scripts": {
     "watchUnit": "NODE_ENV=DEBUG ava --fail-fast -v **/__tests__/**/*test*.js --watch",
-    "ava": "ava",
-    "test": "npm run ava",
+    "ava": "ava --serial",
+    "test": "npm run ava --serial",
     "watchLint": "esw . --ext=js --ignore-pattern '**/__tests__' --ignore-path .gitignore --fix --watch",
     "lint": "eslint . --ext=js --ignore-pattern '**/__tests__' --ignore-path .gitignore --fix"
   },
