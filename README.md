@@ -28,7 +28,7 @@ npm i -S redact-axios-error
 # Interceptor Usage
 
 ```javascript
-import { getAxiosErrorInterceptor } from 'axios-error-redact-interceptor'
+import { getAxiosErrorInterceptor } from 'redact-axios-error/axios-error-redact-interceptor'
 
 axiosClient.interceptors.response.use(null, getAxiosErrorInterceptor())
 ```
