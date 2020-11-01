@@ -6,8 +6,7 @@ import stringify from 'json-stringify-safe'
 import cloneDeep from 'lodash/cloneDeep'
 import safeClone from 'safe-clone-deep'
 
-import { AxiosErrorGroomer } from '../redact-axios-error'
-import { config, getAxiosErrorInterceptor } from '../axios-error-redact-interceptor'
+import { config, getAxiosErrorInterceptor, AxiosErrorGroomer } from '../index'
 
 const app = express()
 const port = 3000
