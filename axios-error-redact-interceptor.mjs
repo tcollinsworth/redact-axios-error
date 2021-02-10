@@ -1,4 +1,4 @@
-import { AxiosErrorGroomer } from './redact-axios-error'
+import { AxiosErrorGroomer } from './redact-axios-error.mjs'
 
 export const config = {
   axiosErrorGroomer: null,

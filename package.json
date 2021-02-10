@@ -2,16 +2,17 @@
   "name": "redact-axios-error",
   "version": "2.1.0",
   "main": "index.js",
+  "type": "module",
   "engines": {
-    "node": ">=10.13.0"
+    "node": ">=14.0.0"
   },
   "description": "grooms and redacts axios errors to trim them down and make them more useful for logging",
   "scripts": {
     "watchUnit": "NODE_ENV=DEBUG ava --fail-fast -v **/__tests__/**/*test*.js --watch",
     "ava": "ava --serial",
     "test": "npm run ava --serial",
-    "watchLint": "esw . --ext=js --ignore-pattern '**/__tests__' --ignore-path .gitignore --fix --watch",
-    "lint": "eslint . --ext=js --ignore-pattern '**/__tests__' --ignore-path .gitignore --fix"
+    "watchLint": "esw . --ext=js --ext=mjs --ignore-path .gitignore --fix --watch",
+    "lint": "eslint . --ext=js --ext=mjs --ignore-path .gitignore --fix"
   },
   "esm": {
     "force": true,
@@ -29,11 +30,11 @@
     "url": "git@github.com:tcollinsworth/redact-axios-error.git"
   },
   "devDependencies": {
-    "ava": "^3.13.0",
-    "axios": "^0.21.0",
+    "ava": "^3.15.0",
+    "axios": "^0.21.1",
     "body-parser": "^1.18.3",
-    "eslint": "^7.12.1",
-    "eslint-config-airbnb-base": "^14.2.0",
+    "eslint": "^7.19.0",
+    "eslint-config-airbnb-base": "^14.2.1",
     "eslint-plugin-import": "^2.16.0",
     "eslint-watch": "^7.0.0",
     "esm": "^3.2.25",
@@ -45,16 +46,5 @@
   "dependencies": {
     "safe-clone-deep": "^1.1.5",
     "traverse": "^0.6.6"
-  },
-  "ava": {
-    "files": [
-      "**/__tests__/**/*test*.js"
-    ],
-    "failFast": true,
-    "verbose": true,
-    "require": [
-      "ignore-styles",
-      "esm"
-    ]
   }
 }
