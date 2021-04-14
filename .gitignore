@@ -15,3 +15,5 @@ coverage
 fallback*.log
 
 *.npmrc
+
+.idea
