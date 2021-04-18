@@ -17,7 +17,7 @@ Can be registerd on axios to redact all response errors before they are thrown.
 
 ## Requirements
 
-ECMAScript modules (esm/.mjs)
+ECMAScript modules (esm), not native esm/.mjs, requires esm
 
 Node 14+
 

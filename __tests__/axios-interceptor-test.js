@@ -6,7 +6,7 @@ import stringify from 'json-stringify-safe'
 import lodash from 'lodash'
 import safeClone from 'safe-clone-deep'
 
-import { config, getAxiosErrorInterceptor, AxiosErrorGroomer } from '../index.mjs'
+import { config, getAxiosErrorInterceptor, AxiosErrorGroomer } from '../index.js'
 
 const isLogRequest = false
 const isLogGroomedError = false

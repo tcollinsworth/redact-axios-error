@@ -1,8 +1,7 @@
 {
   "name": "redact-axios-error",
-  "version": "3.0.1",
-  "main": "index.mjs",
-  "type": "module",
+  "version": "4.0.0",
+  "main": "index.js",
   "engines": {
     "node": ">=14.0.0"
   },
@@ -11,8 +10,8 @@
     "watchUnit": "NODE_ENV=DEBUG ava --fail-fast -v **/__tests__/**/*test*.js --watch",
     "ava": "ava --serial",
     "test": "npm run ava --serial",
-    "watchLint": "esw . --ext=js --ext=mjs --ignore-path .gitignore --fix --watch",
-    "lint": "eslint . --ext=js --ext=mjs --ignore-path .gitignore --fix"
+    "watchLint": "esw . --ext=js --ignore-path .gitignore --fix --watch",
+    "lint": "eslint . --ext=js --ignore-path .gitignore --fix"
   },
   "esm": {
     "force": true,
@@ -33,7 +32,7 @@
     "ava": "^3.15.0",
     "axios": "^0.21.1",
     "body-parser": "^1.18.3",
-    "eslint": "^7.19.0",
+    "eslint": "^7.24.0",
     "eslint-config-airbnb-base": "^14.2.1",
     "eslint-plugin-import": "^2.16.0",
     "eslint-watch": "^7.0.0",
@@ -41,7 +40,7 @@
     "express": "^4.16.4",
     "ignore-styles": "^5.0.1",
     "json-stringify-safe": "^5.0.1",
-    "lodash": "^4.17.20"
+    "lodash": "^4.17.21"
   },
   "dependencies": {
     "safe-clone-deep": "^1.1.5",
