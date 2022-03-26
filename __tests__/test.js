@@ -158,9 +158,9 @@ test('badServer', async (t) => {
     t.is(groomedError.config.data, '{"some":true}')
     t.falsy(groomedError.config.headers.Authorization)
 
-    t.is(groomedError.errno, -3008)
-    t.is(groomedError.code, 'ENOTFOUND')
-    t.is(groomedError.syscall, 'getaddrinfo')
+    t.is(-3001, groomedError.errno)
+    t.is('EAI_AGAIN', groomedError.code)
+    t.is('getaddrinfo', groomedError.syscall)
     t.deepEqual({}, groomedError.response)
   }
 })

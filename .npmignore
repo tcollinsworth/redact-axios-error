@@ -1,2 +1,9 @@
-
 *.npmrc
+__tests__
+.idea
+.npmignore
+.gitignore
+.git
+.eslintrc.cjs
+.eslintignore
+ava.config.cjs
