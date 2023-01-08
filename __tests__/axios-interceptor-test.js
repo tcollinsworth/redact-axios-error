@@ -143,8 +143,8 @@ test('badServer', async (t) => {
     t.is(err.config.data, '{"some":true}')
     t.falsy(err.config.headers.Authorization)
 
-    t.is(-3001, err.errno)
-    t.is('EAI_AGAIN', err.code)
+    t.is(-3008, err.errno)
+    t.is('ENOTFOUND', err.code)
     t.is('getaddrinfo', err.syscall)
     t.deepEqual({}, err.response)
     t.falsy(stringify(err).includes('pass'))
