@@ -29,7 +29,7 @@
     "url": "git@github.com:tcollinsworth/redact-axios-error.git"
   },
   "devDependencies": {
-    "ava": "^3.15.0",
+    "ava": "^5.2.0",
     "axios": "^0.26.1",
     "body-parser": "^1.20.1",
     "eslint": "^8.31.0",
